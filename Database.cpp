@@ -76,7 +76,7 @@ void Database::addTable(char* data, size_t start, size_t end) {
 
 void Database::addTableHeader(char* data, size_t start, size_t end, Table* table) {
 	char* tableHeader = new char[end - start];
-	
+
 	memcpy(tableHeader, data + start, end - start + 1);
 	int nameSize = charBufferToInt(tableHeader);
 	char* name = new char[nameSize];
@@ -85,23 +85,23 @@ void Database::addTableHeader(char* data, size_t start, size_t end, Table* table
 	}
 	name[nameSize] = '\0';
 	table->setName(name);
-	addTableColumns(tableHeader, nameSize + sizeof(int), end - start , table);
+	addTableColumns(tableHeader, nameSize + sizeof(int), end - start, table);
 }
 void Database::addTableColumns(char* data, size_t start, size_t end, Table* table) {
 	char* columns = new char[end - start];
 	memcpy(columns, data + start, end - start + 1);
-	columns[end - start + 1] = '\0';
-	for (int i = 0; i < strlen(columns); i++) {
-		addTableColumn(columns, i + 1, columns[i] + i, table);
+	for (int i = 0; i < end - start; i++) {
+		addTableColumn(columns, i + 1, columns[i] + i + 1, table);
 		i += columns[i];
 	}
 }
 void Database::addTableColumn(char* data, size_t start, size_t end, Table* table) {
 	char* column = new char[end - start];
-	memcpy(column, data + start, end - start + 1);
-	column[end - start + 1] = '\0';
+	memcpy(column, data + start, end - start);
+	column[end - start] = '\0';
 	struct Config::Column col;
-	col.type = Config::ColumnType::BINARY;
+	col.type = (Config::ColumnType) column[end - start];
+	column[end - start - 1] = '\0';
 	col.name = column;
 	table->addColumn(col);
 }
@@ -148,8 +148,9 @@ void Database::create(const char* filename, Config::Config config) {
 		file.write(intToCharBuffer(strlen(config.tables[i].name)), sizeof(int));
 		file << config.tables[i].name;
 		for (int j = 0; j < config.tables[i].columns.size(); j++) {
-			file << (char)strlen(config.tables[i].columns[j].name);
+			file << (char)size(config.tables[i].columns[j]);
 			file << config.tables[i].columns[j].name;
+			file << (char)config.tables[i].columns[j].type;
 		}
 	}
 	file.close();
@@ -159,13 +160,15 @@ Table Database::getTable(int index) {
 	return tables[index];
 }
 
-
+int Database::size(Config::Column col) {
+	return 1 + strlen(col.name);
+}
 int Database::size(Config::Table table) {
-	int size = 1 + sizeof(int) + strlen(table.name);
+	int _size = 1 + sizeof(int) + strlen(table.name);
 	for (int i = 0; i < table.columns.size(); i++) {
-		size += strlen(table.columns[i].name) + 1;
+		_size += size(table.columns[i]) + 1;
 	}
-	return size;
+	return _size;
 }
 
 int Database::tableCount() {
@@ -173,11 +176,11 @@ int Database::tableCount() {
 }
 
 int Database::headerSize(Config::Table table) {
-	int size = sizeof(int) + strlen(table.name);
+	int _size = sizeof(int) + strlen(table.name);
 	for (int i = 0; i < table.columns.size(); i++) {
-		size += strlen(table.columns[i].name) + 1;
+		_size += size(table.columns[i]) + 1;
 	}
-	return size;
+	return _size;
 }
 char* Database::getName() {
 	return this->name;
