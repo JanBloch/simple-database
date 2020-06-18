@@ -3,9 +3,9 @@
 
 namespace Config {
 	enum ColumnType {
-		INTEGER,
-		STRING,
-		BINARY
+		INTEGER = 0,
+		STRING = 1,
+		BINARY = 2
 	};
 	struct Column {
 		const char* name;
@@ -21,12 +21,15 @@ namespace Config {
 	};
 }
 class TableEntry {
-
+public: 
+	char* data;
 };
 class Table {
 public:
 	void addColumn(struct Config::Column col);
 	void setName(char* name);
+	void addEntry(TableEntry entry);
+	TableEntry getEntry(int index);
 	int getColumnCount();
 	struct Config::Column getColumn(int index);
 	char* getName();
@@ -45,6 +48,7 @@ public:
 	void addTableEntry(char* data, size_t start, size_t end, Table* table);
 	void create(const char* filename, struct Config::Config config);
 	Table getTable(int index);
+	int size(Config::Column col);
 	int size(Config::Table table);
 	int tableCount();
 	void addTable(Table table);

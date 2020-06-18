@@ -111,6 +111,12 @@ void Table::addColumn(struct Config::Column col) {
 void Table::setName(char* name) {
 	this->name = name;
 }
+void Table::addEntry(TableEntry entry) {
+	entries.push_back(entry);
+}
+TableEntry Table::getEntry(int index) {
+	return entries[index];
+}
 int Table::getColumnCount() {
 	return columns.size();
 }
@@ -123,6 +129,9 @@ char* Table::getName() {
 void Database::addTableEntry(char* data, size_t start, size_t end, Table* table) {
 	char* tableEntry = new char[end - start];
 	memcpy(tableEntry, data + start, end - start + 1);
+	TableEntry entry;
+	entry.data = tableEntry;
+
 }
 
 
