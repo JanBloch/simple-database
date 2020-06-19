@@ -47,12 +47,15 @@ public:
 	void addTableColumn(char* data, size_t start, size_t end, Table* table);
 	void addTableEntry(char* data, size_t start, size_t end, Table* table);
 	void create(const char* filename, struct Config::Config config);
+	void save(const char* filename);
 	Table getTable(int index);
-	int size(Config::Column col);
-	int size(Config::Table table);
+	static int size(Config::Column col);
+	static int size(Config::Table table);
+	static int size(Table table);
 	int tableCount();
 	void addTable(Table table);
-	int headerSize(Config::Table table);
+	static int headerSize(Config::Table table);
+	static int headerSize(Table table);
 	char* getName();
 private:
 	char* name;

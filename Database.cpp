@@ -156,6 +156,23 @@ void Database::create(const char* filename, Config::Config config) {
 	file.close();
 }
 
+void Database::save(const char* filename) {
+	std::ofstream file(filename, std::ios::binary);
+	file.write(intToCharBuffer(strlen(this->name)), sizeof(int));
+	file << this->name;
+	for (int i = 0; i < this->tables.size(); i++) {
+		file << (char)size(this->tables[i]);
+		file << (char)headerSize(this->getTable(i));
+		file.write(intToCharBuffer(strlen(this->getTable(i).getName())), sizeof(int));
+		file << this->getTable(i).getName();
+		for (int j = 0; j < this->getTable(i).getColumnCount(); j++) {
+			file << (char)size(this->getTable(i).getColumn(j));
+			file << this->getTable(i).getColumn(j).name;
+			file << (char)this->getTable(i).getColumn(j).type;
+		}
+	}
+}
+
 Table Database::getTable(int index) {
 	return tables[index];
 }
@@ -170,7 +187,13 @@ int Database::size(Config::Table table) {
 	}
 	return _size;
 }
-
+int Database::size(Table table) {
+	int _size = 1 + sizeof(int) + strlen(table.getName());
+	for (int i = 0; i < table.getColumnCount(); i++) {
+		_size += size(table.getColumn(i)) + 1;
+	}
+	return _size;
+}
 int Database::tableCount() {
 	return tables.size();
 }
@@ -179,6 +202,13 @@ int Database::headerSize(Config::Table table) {
 	int _size = sizeof(int) + strlen(table.name);
 	for (int i = 0; i < table.columns.size(); i++) {
 		_size += size(table.columns[i]) + 1;
+	}
+	return _size;
+}
+int Database::headerSize(Table table) {
+	int _size = sizeof(int) + strlen(table.getName());
+	for (int i = 0; i < table.getColumnCount(); i++) {
+		_size += size(table.getColumn(i)) + 1;
 	}
 	return _size;
 }
