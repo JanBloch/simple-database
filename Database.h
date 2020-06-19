@@ -31,6 +31,7 @@ public:
 	void addEntry(TableEntry entry);
 	TableEntry getEntry(int index);
 	int getColumnCount();
+	int getEntryCount();
 	struct Config::Column getColumn(int index);
 	char* getName();
 private:

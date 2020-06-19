@@ -120,6 +120,9 @@ TableEntry Table::getEntry(int index) {
 int Table::getColumnCount() {
 	return columns.size();
 }
+int Table::getEntryCount() {
+	return entries.size();
+}
 Config::Column Table::getColumn(int index) {
 	return columns[index];
 }
@@ -169,6 +172,10 @@ void Database::save(const char* filename) {
 			file << (char)size(this->getTable(i).getColumn(j));
 			file << this->getTable(i).getColumn(j).name;
 			file << (char)this->getTable(i).getColumn(j).type;
+		}
+		for (int j = 0; j < this->getTable(i).getEntryCount(); j++) {
+			file << (char)strlen(this->getTable(i).getEntry(j).data);
+			file << this->getTable(i).getEntry(j).data;
 		}
 	}
 }
