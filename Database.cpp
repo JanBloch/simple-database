@@ -78,6 +78,7 @@ void Database::addTableHeader(char* data, size_t start, size_t end, Table* table
 	char* tableHeader = new char[end - start];
 
 	memcpy(tableHeader, data + start, end - start + 1);
+	//printf(tableHeader);
 	int nameSize = charBufferToInt(tableHeader);
 	char* name = new char[nameSize];
 	for (int i = sizeof(int); i < nameSize + sizeof(int); i++) {
@@ -184,6 +185,10 @@ Table Database::getTable(int index) {
 	return tables[index];
 }
 
+Table* Database::getTablePtr(int index) {
+	return &tables[index];
+}
+
 int Database::size(Config::Column col) {
 	return 1 + strlen(col.name);
 }
@@ -198,6 +203,9 @@ int Database::size(Table table) {
 	int _size = 1 + sizeof(int) + strlen(table.getName());
 	for (int i = 0; i < table.getColumnCount(); i++) {
 		_size += size(table.getColumn(i)) + 1;
+	}
+	for (int i = 0; i < table.getEntryCount(); i++) {
+		_size += strlen(table.getEntry(i).data) + 1;
 	}
 	return _size;
 }

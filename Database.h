@@ -50,6 +50,7 @@ public:
 	void create(const char* filename, struct Config::Config config);
 	void save(const char* filename);
 	Table getTable(int index);
+	Table* getTablePtr(int index);
 	static int size(Config::Column col);
 	static int size(Config::Table table);
 	static int size(Table table);
