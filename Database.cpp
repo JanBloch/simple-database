@@ -10,7 +10,7 @@ void copy(char* target, char* arr, size_t start, size_t size) {
 void print_arr(char arr[], size_t arr_length) {
 	printf("[");
 	for (int i = 0; i < arr_length; i++) {
-		const char* str = (i == arr_length - 1) ? "%d]\n" : "%d, ";
+		const char* str = (i == arr_length - 1) ? "%X]\n" : "%X, ";
 		printf(str, (int)arr[i]);
 	}
 }
@@ -51,8 +51,9 @@ void Database::openFromFile(const char* filename) {
 		name[j - sizeof(int)] = arr[j];
 	}
 	for (size_t j = nameSize + sizeof(int); j < size; j++) {
+		printf("j: %d\narr[j]: %d\n",j, arr[j]);
 		this->addTable(arr, j + 1, j + arr[j]);
-		j += arr[j];
+		j += arr[j] - 1;
 	}
 	name[arr[0]] = '\0';
 	this->name = name;
@@ -64,6 +65,10 @@ void Database::addTable(char* data, size_t start, size_t end) {
 	if (strlen(tableData) > end - start + 1) {
 		tableData[end - start + 1] = '\0';
 	}
+	printf("char* tableData: ");
+	print_arr(tableData, end - start);
+/*	printf("TableData: %s\n", tableData);*/
+	
 	Table table;
 	addTableHeader(tableData, 1, tableData[0], &table);
 	for (int i = tableData[0]; i < strlen(tableData); i++) {
@@ -79,6 +84,8 @@ void Database::addTableHeader(char* data, size_t start, size_t end, Table* table
 
 	memcpy(tableHeader, data + start, end - start + 1);
 	//printf(tableHeader);
+	printf("char* tableHeader: ");
+	print_arr(tableHeader, end - start);
 	int nameSize = charBufferToInt(tableHeader);
 	char* name = new char[nameSize];
 	for (int i = sizeof(int); i < nameSize + sizeof(int); i++) {
@@ -135,7 +142,7 @@ void Database::addTableEntry(char* data, size_t start, size_t end, Table* table)
 	memcpy(tableEntry, data + start, end - start + 1);
 	TableEntry entry;
 	entry.data = tableEntry;
-
+	table->addEntry(entry);
 }
 
 
@@ -175,7 +182,7 @@ void Database::save(const char* filename) {
 			file << (char)this->getTable(i).getColumn(j).type;
 		}
 		for (int j = 0; j < this->getTable(i).getEntryCount(); j++) {
-			file << (char)strlen(this->getTable(i).getEntry(j).data);
+			file << (char)(strlen(this->getTable(i).getEntry(j).data));
 			file << this->getTable(i).getEntry(j).data;
 		}
 	}
@@ -207,7 +214,7 @@ int Database::size(Table table) {
 	for (int i = 0; i < table.getEntryCount(); i++) {
 		_size += strlen(table.getEntry(i).data) + 1;
 	}
-	return _size;
+	return _size + 1;
 }
 int Database::tableCount() {
 	return tables.size();

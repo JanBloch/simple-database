@@ -21,15 +21,22 @@ void print_table(Table table) {
 		Config::Column col = table.getColumn(i);
 		printf("%s | %s\t", col.name, print_type(col.type));
 	}
+	printf("\n");
+	for (int i = 0; i < table.getEntryCount(); i++) {
+		printf("%s\n", table.getEntry(i).data);
+	}
 	printf("\n\n");
 }
 
 
 int main() {
 	Database db;
-	create(&db);
+	//create(&db);
 	open(&db);
-	db.save("_database.db");
+	//TableEntry entry;
+	//entry.data = (char*)"asdf";
+	//db.getTablePtr(0)->addEntry(entry);
+	//db.save("database.db");
 	for (int i = 0; i < db.tableCount(); i++) {
 		print_table(db.getTable(i));
 	}
