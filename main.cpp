@@ -3,18 +3,40 @@
 void create(Database * db);
 void open(Database * db);
 
+const char *  print_type(Config::ColumnType type) {
+	switch (type) {
+	case Config::ColumnType::INTEGER:
+		return "Integer";
+	case Config::ColumnType::STRING:
+		return "String";
+	case Config::ColumnType::BINARY:
+		return "Binary";
+	}
+	return "Unknown";
+}
+
 void print_table(Table table) {
 	printf("%s\n", table.getName());
 	for (int i = 0; i < table.getColumnCount(); i++) {
-		printf("%s\t", table.getColumn(i).name);
+		Config::Column col = table.getColumn(i);
+		printf("%s | %s\t", col.name, print_type(col.type));
+	}
+	printf("\n");
+	for (int i = 0; i < table.getEntryCount(); i++) {
+		printf("%s\n", table.getEntry(i).data);
 	}
 	printf("\n\n");
 }
 
+
 int main() {
 	Database db;
-	create(&db);
+	//create(&db);
 	open(&db);
+	//TableEntry entry;
+	//entry.data = (char*)"asdf";
+	//db.getTablePtr(0)->addEntry(entry);
+	//db.save("database.db");
 	for (int i = 0; i < db.tableCount(); i++) {
 		print_table(db.getTable(i));
 	}

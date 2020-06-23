@@ -10,7 +10,7 @@ void copy(char* target, char* arr, size_t start, size_t size) {
 void print_arr(char arr[], size_t arr_length) {
 	printf("[");
 	for (int i = 0; i < arr_length; i++) {
-		const char* str = (i == arr_length - 1) ? "%d]\n" : "%d, ";
+		const char* str = (i == arr_length - 1) ? "%X]\n" : "%X, ";
 		printf(str, (int)arr[i]);
 	}
 }
@@ -51,8 +51,9 @@ void Database::openFromFile(const char* filename) {
 		name[j - sizeof(int)] = arr[j];
 	}
 	for (size_t j = nameSize + sizeof(int); j < size; j++) {
+		printf("j: %d\narr[j]: %d\n",j, arr[j]);
 		this->addTable(arr, j + 1, j + arr[j]);
-		j += arr[j];
+		j += arr[j] - 1;
 	}
 	name[arr[0]] = '\0';
 	this->name = name;
@@ -61,14 +62,15 @@ void Database::openFromFile(const char* filename) {
 void Database::addTable(char* data, size_t start, size_t end) {
 	char* tableData = new char[end - start];
 	memcpy(tableData, data + start, end - start + 1);
-	if (strlen(tableData) > end - start + 1) {
-		tableData[end - start + 1] = '\0';
-	}
+	printf("char* tableData: ");
+	print_arr(tableData, end - start);
+/*	printf("TableData: %s\n", tableData);*/
+	
 	Table table;
 	addTableHeader(tableData, 1, tableData[0], &table);
-	for (int i = tableData[0]; i < strlen(tableData); i++) {
+	for (int i = tableData[0]; i < end - start; i++) {
 		TableEntry entry;
-		addTableEntry(tableData, i + 1, i + tableData[i], &table);
+		addTableEntry(tableData, i + 1, i + tableData[i] + 1, &table);
 		i += tableData[i];
 	}
 	tables.push_back(table);
@@ -78,6 +80,9 @@ void Database::addTableHeader(char* data, size_t start, size_t end, Table* table
 	char* tableHeader = new char[end - start];
 
 	memcpy(tableHeader, data + start, end - start + 1);
+	//printf(tableHeader);
+	printf("char* tableHeader: ");
+	print_arr(tableHeader, end - start);
 	int nameSize = charBufferToInt(tableHeader);
 	char* name = new char[nameSize];
 	for (int i = sizeof(int); i < nameSize + sizeof(int); i++) {
@@ -120,6 +125,9 @@ TableEntry Table::getEntry(int index) {
 int Table::getColumnCount() {
 	return columns.size();
 }
+int Table::getEntryCount() {
+	return entries.size();
+}
 Config::Column Table::getColumn(int index) {
 	return columns[index];
 }
@@ -129,9 +137,11 @@ char* Table::getName() {
 void Database::addTableEntry(char* data, size_t start, size_t end, Table* table) {
 	char* tableEntry = new char[end - start];
 	memcpy(tableEntry, data + start, end - start + 1);
+	tableEntry[end - start] = '\0';
+
 	TableEntry entry;
 	entry.data = tableEntry;
-
+	table->addEntry(entry);
 }
 
 
@@ -156,8 +166,33 @@ void Database::create(const char* filename, Config::Config config) {
 	file.close();
 }
 
+void Database::save(const char* filename) {
+	std::ofstream file(filename, std::ios::binary);
+	file.write(intToCharBuffer(strlen(this->name)), sizeof(int));
+	file << this->name;
+	for (int i = 0; i < this->tables.size(); i++) {
+		file << (char)size(this->tables[i]);
+		file << (char)headerSize(this->getTable(i));
+		file.write(intToCharBuffer(strlen(this->getTable(i).getName())), sizeof(int));
+		file << this->getTable(i).getName();
+		for (int j = 0; j < this->getTable(i).getColumnCount(); j++) {
+			file << (char)size(this->getTable(i).getColumn(j));
+			file << this->getTable(i).getColumn(j).name;
+			file << (char)this->getTable(i).getColumn(j).type;
+		}
+		for (int j = 0; j < this->getTable(i).getEntryCount(); j++) {
+			file << (char)(strlen(this->getTable(i).getEntry(j).data));
+			file << this->getTable(i).getEntry(j).data;
+		}
+	}
+}
+
 Table Database::getTable(int index) {
 	return tables[index];
+}
+
+Table* Database::getTablePtr(int index) {
+	return &tables[index];
 }
 
 int Database::size(Config::Column col) {
@@ -168,9 +203,18 @@ int Database::size(Config::Table table) {
 	for (int i = 0; i < table.columns.size(); i++) {
 		_size += size(table.columns[i]) + 1;
 	}
-	return _size;
+	return _size + 1;
 }
-
+int Database::size(Table table) {
+	int _size = 1 + sizeof(int) + strlen(table.getName());
+	for (int i = 0; i < table.getColumnCount(); i++) {
+		_size += size(table.getColumn(i)) + 1;
+	}
+	for (int i = 0; i < table.getEntryCount(); i++) {
+		_size += strlen(table.getEntry(i).data) + 1;
+	}
+	return _size + 1;
+}
 int Database::tableCount() {
 	return tables.size();
 }
@@ -180,7 +224,14 @@ int Database::headerSize(Config::Table table) {
 	for (int i = 0; i < table.columns.size(); i++) {
 		_size += size(table.columns[i]) + 1;
 	}
-	return _size;
+	return _size + 1;
+}
+int Database::headerSize(Table table) {
+	int _size = sizeof(int) + strlen(table.getName());
+	for (int i = 0; i < table.getColumnCount(); i++) {
+		_size += size(table.getColumn(i)) + 1;
+	}
+	return _size + 1;
 }
 char* Database::getName() {
 	return this->name;
