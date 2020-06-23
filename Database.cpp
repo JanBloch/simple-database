@@ -62,18 +62,15 @@ void Database::openFromFile(const char* filename) {
 void Database::addTable(char* data, size_t start, size_t end) {
 	char* tableData = new char[end - start];
 	memcpy(tableData, data + start, end - start + 1);
-	if (strlen(tableData) > end - start + 1) {
-		tableData[end - start + 1] = '\0';
-	}
 	printf("char* tableData: ");
 	print_arr(tableData, end - start);
 /*	printf("TableData: %s\n", tableData);*/
 	
 	Table table;
 	addTableHeader(tableData, 1, tableData[0], &table);
-	for (int i = tableData[0]; i < strlen(tableData); i++) {
+	for (int i = tableData[0]; i < end - start; i++) {
 		TableEntry entry;
-		addTableEntry(tableData, i + 1, i + tableData[i], &table);
+		addTableEntry(tableData, i + 1, i + tableData[i] + 1, &table);
 		i += tableData[i];
 	}
 	tables.push_back(table);
@@ -140,6 +137,8 @@ char* Table::getName() {
 void Database::addTableEntry(char* data, size_t start, size_t end, Table* table) {
 	char* tableEntry = new char[end - start];
 	memcpy(tableEntry, data + start, end - start + 1);
+	tableEntry[end - start] = '\0';
+
 	TableEntry entry;
 	entry.data = tableEntry;
 	table->addEntry(entry);
@@ -204,7 +203,7 @@ int Database::size(Config::Table table) {
 	for (int i = 0; i < table.columns.size(); i++) {
 		_size += size(table.columns[i]) + 1;
 	}
-	return _size;
+	return _size + 1;
 }
 int Database::size(Table table) {
 	int _size = 1 + sizeof(int) + strlen(table.getName());
@@ -225,14 +224,14 @@ int Database::headerSize(Config::Table table) {
 	for (int i = 0; i < table.columns.size(); i++) {
 		_size += size(table.columns[i]) + 1;
 	}
-	return _size;
+	return _size + 1;
 }
 int Database::headerSize(Table table) {
 	int _size = sizeof(int) + strlen(table.getName());
 	for (int i = 0; i < table.getColumnCount(); i++) {
 		_size += size(table.getColumn(i)) + 1;
 	}
-	return _size;
+	return _size + 1;
 }
 char* Database::getName() {
 	return this->name;
