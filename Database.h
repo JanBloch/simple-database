@@ -34,6 +34,8 @@ public:
 	int getEntryCount();
 	struct Config::Column getColumn(int index);
 	char* getName();
+	int headerSize();
+	static int size(Config::Column col);
 private:
 	char* name;
 	std::vector<struct Config::Column> columns;
@@ -51,13 +53,11 @@ public:
 	void save(const char* filename);
 	Table getTable(int index);
 	Table* getTablePtr(int index);
-	static int size(Config::Column col);
 	static int size(Config::Table table);
 	static int size(Table table);
 	int tableCount();
 	void addTable(Table table);
 	static int headerSize(Config::Table table);
-	static int headerSize(Table table);
 	char* getName();
 private:
 	char* name;
